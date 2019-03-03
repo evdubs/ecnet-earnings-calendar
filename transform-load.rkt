@@ -85,4 +85,13 @@ insert into ecnet.earnings_calendar (
                                         (hash-ref ticker-when-hash 'when))
                             (commit-transaction dbc))) _)))))))
 
+; vacuum (garbage collect) and reindex table as we deleted from it earlier
+(query-exec dbc "
+vacuum full freeze analyze ecnet.earnings_calendar;
+")
+
+(query-exec dbc "
+reindex table ecnet.earnings_calendar;
+")
+
 (disconnect dbc)
