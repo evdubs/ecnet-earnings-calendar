@@ -55,17 +55,22 @@ where
           [date-of-earnings (string-replace (path->string p) ".json" "")])
       (call-with-input-file file-name
         (λ (in)
-          (~> (port->string in)
-              (string->jsexpr _)
-              (for-each (λ (ticker-when-hash)
-                          (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process "
-                                                                                      (hash-ref ticker-when-hash 'ticker)
-                                                                                      " for date "
-                                                                                      date-of-earnings))
-                                                       (displayln ((error-value->string-handler) e 1000))
-                                                       (rollback-transaction dbc))])
-                            (start-transaction dbc)
-                            (query-exec dbc "
+          (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to parse "
+                                                                      file-name
+                                                                      " for date "
+                                                                      date-of-earnings))
+                                       (displayln ((error-value->string-handler) e 1000)))])
+            (~> (port->string in)
+                (string->jsexpr _)
+                (for-each (λ (ticker-when-hash)
+                            (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to insert "
+                                                                                        (hash-ref ticker-when-hash 'ticker)
+                                                                                        " for date "
+                                                                                        date-of-earnings))
+                                                         (displayln ((error-value->string-handler) e 1000))
+                                                         (rollback-transaction dbc))])
+                              (start-transaction dbc)
+                              (query-exec dbc "
 insert into ecnet.earnings_calendar (
   act_symbol,
   date,
@@ -80,10 +85,10 @@ insert into ecnet.earnings_calendar (
   end
 ) on conflict do nothing;
 "
-                                        (hash-ref ticker-when-hash 'ticker)
-                                        date-of-earnings
-                                        (hash-ref ticker-when-hash 'when))
-                            (commit-transaction dbc))) _)))))))
+                                          (hash-ref ticker-when-hash 'ticker)
+                                          date-of-earnings
+                                          (hash-ref ticker-when-hash 'when))
+                              (commit-transaction dbc))) _))))))))
 
 ; vacuum (garbage collect) and reindex table as we deleted from it earlier
 (query-exec dbc "
