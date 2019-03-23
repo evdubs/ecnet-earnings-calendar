@@ -11,3 +11,8 @@ CREATE TABLE ecnet.earnings_calendar
       REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+
+CREATE INDEX earnings_calendar_date_idx
+  ON ecnet.earnings_calendar
+  USING btree
+  (date);
