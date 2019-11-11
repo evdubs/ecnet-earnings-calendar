@@ -1,17 +1,17 @@
 #lang racket/base
 
 (require db
+         gregor
          json
          racket/cmdline
          racket/port
          racket/sequence
          racket/string
-         srfi/19 ; Time Data Types and Procedures
          threading)
 
 (define base-folder (make-parameter "/var/tmp/ecnet/earnings-calendar"))
 
-(define folder-date (make-parameter (current-date)))
+(define folder-date (make-parameter (today)))
 
 (define db-user (make-parameter "user"))
 
@@ -27,7 +27,7 @@
                          (base-folder folder)]
  [("-d" "--folder-date") date
                          "Earnings Calendar folder date. Defaults to today"
-                         (folder-date (string->date date "~Y-~m-~d"))]
+                         (folder-date (iso8601->date date))]
  [("-n" "--db-name") name
                      "Database name. Defaults to 'local'"
                      (db-name name)]
@@ -47,11 +47,11 @@ delete from
 where
   date >= $1::text::date;
 "
-            (date->string (folder-date) "~1"))
+            (~t (folder-date) "yyyy-MM-dd"))
 
-(parameterize ([current-directory (string-append (base-folder) "/" (date->string (folder-date) "~1") "/")])
+(parameterize ([current-directory (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/")])
   (for ([p (sequence-filter (λ (p) (string-contains? (path->string p) ".json")) (in-directory))])
-    (let ([file-name (string-append (base-folder) "/" (date->string (folder-date) "~1") "/" (path->string p))]
+    (let ([file-name (string-append (base-folder) "/" (~t (folder-date) "yyyy-MM-dd") "/" (path->string p))]
           [date-of-earnings (string-replace (path->string p) ".json" "")])
       (call-with-input-file file-name
         (λ (in)
