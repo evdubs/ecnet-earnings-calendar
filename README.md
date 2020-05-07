@@ -1,3 +1,6 @@
+# Library deprecated
+The service that had been provided at earningscalendar.net is no longer free. Please see [zacks-estimates-financial-statements](https://github.com/evdubs/zacks-estimates-financial-statements) for another earnings calendar ETL program.
+
 # ecnet-earnings-calendar
 These Racket programs will download earnings calendar JSON documents from https://earningscalendar.net and insert the
 data into a PostgreSQL database. The intended usage is:
